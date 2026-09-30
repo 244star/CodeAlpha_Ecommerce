@@ -91,18 +91,30 @@ The cart is kept client-side (localStorage) and sent to the server at checkout.
    ```
 
 3. **Create and seed the database**
-   ```bash
-   mysql -u root -p -e "CREATE DATABASE ecommerce_store CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci"
-   mysql -u root -p ecommerce_store < server/db/schema.sql
-   mysql -u root -p ecommerce_store < server/db/seed.sql
+   In Windows PowerShell, create the database and load the schema and sample products:
+   ```powershell
+   $mysql = "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe"
+   & $mysql -u root -p -e "CREATE DATABASE ecommerce_store CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci"
+   Get-Content .\server\db\schema.sql | & $mysql -u root -p ecommerce_store
+   Get-Content .\server\db\seed.sql | & $mysql -u root -p ecommerce_store
+   ```
+
+   Create a dedicated application account in the MySQL prompt, using a strong password:
+   ```sql
+   CREATE USER 'ecommerce_app'@'localhost' IDENTIFIED BY 'replace_with_a_strong_password';
+   GRANT SELECT, INSERT, UPDATE, DELETE ON ecommerce_store.* TO 'ecommerce_app'@'localhost';
    ```
 
 4. **Configure environment variables**
 
-   Copy `.env.example` to `.env` and fill in your database URL and a random JWT secret (at least 32 characters):
+   Copy `.env.example` to `.env`. Set `DB_PASSWORD` to the same password used when creating `ecommerce_app`, and set `JWT_SECRET` to a random string of at least 32 characters:
    ```env
    PORT=5000
-   DATABASE_URL=mysql://user:password@localhost:3306/ecommerce_store
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USER=ecommerce_app
+   DB_PASSWORD=replace_with_a_strong_password
+   DB_NAME=ecommerce_store
    JWT_SECRET=replace_with_a_long_random_string
    MYSQL_SSL=false
    ```
