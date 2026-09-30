@@ -9,13 +9,26 @@ const mysql = require("mysql2/promise");
 const app = express();
 const port = Number(process.env.PORT) || 5000;
 const databaseUrl = process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL) : null;
-const pool = databaseUrl
-  ? mysql.createPool({
+const databaseConfig = databaseUrl
+  ? {
       host: databaseUrl.hostname,
       port: Number(databaseUrl.port) || 3306,
       user: decodeURIComponent(databaseUrl.username),
       password: decodeURIComponent(databaseUrl.password),
-      database: decodeURIComponent(databaseUrl.pathname.slice(1)),
+      database: decodeURIComponent(databaseUrl.pathname.slice(1))
+    }
+  : process.env.DB_HOST && process.env.DB_USER && process.env.DB_PASSWORD && process.env.DB_NAME
+    ? {
+        host: process.env.DB_HOST,
+        port: Number(process.env.DB_PORT) || 3306,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME
+      }
+    : null;
+const pool = databaseConfig
+  ? mysql.createPool({
+      ...databaseConfig,
       ssl: process.env.MYSQL_SSL === "true" ? {} : undefined,
       waitForConnections: true,
       connectionLimit: 10
@@ -31,7 +44,7 @@ app.use(express.json({ limit: "30kb" }));
 app.use(express.static(path.join(__dirname, "client")));
 
 function requireDatabase(req, res, next) {
-  if (!process.env.DATABASE_URL) return res.status(503).json({ error: "The store database is not configured yet." });
+  if (!pool) return res.status(503).json({ error: "The store database is not configured yet." });
   next();
 }
 
@@ -56,7 +69,7 @@ function createToken(user) {
 }
 
 app.get("/api/health", async (req, res) => {
-  if (!process.env.DATABASE_URL) return res.json({ status: "ok", database: "not_configured" });
+  if (!pool) return res.json({ status: "ok", database: "not_configured" });
   try {
     await query("SELECT 1");
     res.json({ status: "ok", database: "connected" });
