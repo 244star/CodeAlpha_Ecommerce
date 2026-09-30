@@ -1,0 +1,38 @@
+CREATE TABLE IF NOT EXISTS users (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(254) NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS products (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(160) NOT NULL,
+  description TEXT NOT NULL,
+  price NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
+  image_url TEXT NOT NULL,
+  category VARCHAR(60) NOT NULL,
+  stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS orders (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNSIGNED NOT NULL,
+  total NUMERIC(10, 2) NOT NULL CHECK (total >= 0),
+  status VARCHAR(30) NOT NULL DEFAULT 'placed',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX orders_user_created_idx (user_id, created_at DESC),
+  CONSTRAINT orders_user_fk FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS order_items (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  order_id INT UNSIGNED NOT NULL,
+  product_id INT UNSIGNED NOT NULL,
+  quantity INTEGER NOT NULL CHECK (quantity > 0),
+  unit_price NUMERIC(10, 2) NOT NULL CHECK (unit_price >= 0),
+  INDEX order_items_order_idx (order_id),
+  CONSTRAINT order_items_order_fk FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+  CONSTRAINT order_items_product_fk FOREIGN KEY (product_id) REFERENCES products(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

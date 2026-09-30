@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f3ee">
+    <meta name="description" content="Useful things, thoughtfully made. Shop considered essentials for slower mornings and everyday rituals.">
+    <title>Morrow Supply — Useful things, thoughtfully made</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/app.js" defer></script>
+  </head>
+  <body>
+    <div class="announcement">A little more considered. Free shipping on orders over $75.</div>
+    <header class="site-header">
+      <a class="wordmark" href="#top" aria-label="Morrow Supply home">morrow<span>®</span></a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="#shop">Shop all</a>
+        <a href="#shop" data-nav-category="Home">Home</a>
+        <a href="#shop" data-nav-category="Everyday">Everyday</a>
+        <a href="#story">Our point of view</a>
+      </nav>
+      <div class="header-actions">
+        <button class="text-button account-button" id="account-button" type="button">Sign in</button>
+        <button class="bag-button" id="open-cart" type="button" aria-label="Open shopping bag">Bag <span id="bag-count">0</span></button>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-mark"></span> Objects for everyday living</p>
+          <h1 id="hero-title">Make room<br>for <em>the good.</em></h1>
+          <p class="hero-description">Useful things, thoughtfully made. Pieces to bring a little more intention to the everyday.</p>
+          <a class="button button-dark" href="#shop">Find your everyday <span aria-hidden="true">↘</span></a>
+          <p class="hero-note">Small rituals. Better days.</p>
+        </div>
+        <div class="hero-image" role="img" aria-label="A quiet morning scene with a handmade ceramic cup and fresh flowers">
+          <div class="image-caption"><span>01 / 04</span><span>Slow mornings, made better</span></div>
+        </div>
+        <div class="hero-index" aria-hidden="true">M / 001</div>
+      </section>
+
+      <section class="shop-section" id="shop" aria-labelledby="shop-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">The considered edit · 2026</p>
+            <h2 id="shop-title">Good things, <em>in rotation.</em></h2>
+          </div>
+          <p class="section-aside">Made to be reached for.<br>Made to stay awhile.</p>
+        </div>
+        <div class="shop-tools">
+          <div class="category-list" role="group" aria-label="Filter products by category">
+            <button class="category-button is-active" data-category="All" type="button">Everything <span>08</span></button>
+            <button class="category-button" data-category="Home" type="button">Home</button>
+            <button class="category-button" data-category="Everyday" type="button">Everyday</button>
+            <button class="category-button" data-category="Desk" type="button">At the desk</button>
+          </div>
+          <label class="search-box"><span class="visually-hidden">Search products</span><span aria-hidden="true">⌕</span><input id="search-input" type="search" placeholder="Find something" autocomplete="off"></label>
+          <label class="sort-box"><span class="visually-hidden">Sort products</span><select id="sort-select"><option value="featured">Featured</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="name">Name: A to Z</option></select></label>
+        </div>
+        <p class="results-line" id="results-line" aria-live="polite">A few good things to get you started</p>
+        <div class="product-grid" id="product-grid" aria-live="polite"></div>
+        <p class="empty-state" id="empty-state" hidden>No pieces found. Try another search or category.</p>
+      </section>
+
+      <section class="story-section" id="story">
+        <div class="story-image" role="img" aria-label="Natural materials and objects arranged in a sunlit home"></div>
+        <div class="story-copy">
+          <p class="eyebrow">A note from us</p>
+          <h2>Less, but<br><em>with feeling.</em></h2>
+          <p>We believe the things we live with should earn their place. So we look for good materials, useful forms, and the little details that make an ordinary day feel like your own.</p>
+          <a class="underlined-link" href="#shop">Get to know the collection <span aria-hidden="true">↗</span></a>
+          <span class="story-stamp" aria-hidden="true">Objects<br>with purpose</span>
+        </div>
+      </section>
+      <section class="newsletter" aria-label="Newsletter">
+        <p class="eyebrow">A good note, now and then</p>
+        <h2>A little more <em>morrow.</em></h2>
+        <form id="newsletter-form" class="newsletter-form">
+          <label class="visually-hidden" for="newsletter-email">Email address</label>
+          <input id="newsletter-email" type="email" placeholder="Your email address" required>
+          <button type="submit" aria-label="Subscribe to newsletter">Join us <span aria-hidden="true">↗</span></button>
+        </form>
+        <p class="newsletter-message" id="newsletter-message" aria-live="polite">Good things, no noise. Unsubscribe whenever.</p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a class="wordmark" href="#top">morrow<span>®</span></a>
+      <p>Everyday things for the way you live.</p>
+      <div><a href="#shop">Shop</a><a href="#story">Our story</a><a href="mailto:hello@morrowsupply.example">Get in touch</a></div>
+      <span>© 2026 Morrow Supply</span>
+    </footer>
+
+    <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+    <aside class="cart-drawer" id="cart-drawer" aria-labelledby="cart-title" aria-modal="true" role="dialog" hidden>
+      <div class="drawer-header"><div><p class="eyebrow">Your good things</p><h2 id="cart-title">Your bag <span id="drawer-count">(0)</span></h2></div><button class="close-button" type="button" data-close-drawer aria-label="Close bag">×</button></div>
+      <div class="cart-items" id="cart-items"></div>
+      <div class="cart-empty" id="cart-empty"><span aria-hidden="true">○</span><p>Your bag is taking a quiet moment.</p><a class="underlined-link" href="#shop" data-close-drawer>Explore the collection <span aria-hidden="true">↗</span></a></div>
+      <div class="cart-footer" id="cart-footer"><div class="subtotal-line"><span>Subtotal</span><strong id="cart-subtotal">$0.00</strong></div><p>Shipping and taxes are worked out at checkout.</p><button class="button button-dark checkout-button" id="checkout-button" type="button">Continue to checkout <span aria-hidden="true">↗</span></button></div>
+    </aside>
+
+    <dialog class="product-dialog" id="product-dialog"></dialog>
+    <dialog class="account-dialog" id="account-dialog" aria-labelledby="account-title"></dialog>
+    <dialog class="checkout-dialog" id="checkout-dialog" aria-labelledby="checkout-title"></dialog>
+    <dialog class="orders-dialog" id="orders-dialog" aria-labelledby="orders-title"></dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
