@@ -11,6 +11,11 @@ const fallbackProducts = [
 
 const money = (amount) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(amount));
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+const renderRating = (rating = 0, reviewCount = 0) => {
+  const safeRating = Number(rating) || 0;
+  const stars = Array.from({ length: 5 }, (_, index) => `<span class="${index < Math.round(safeRating) ? "filled" : "empty"}">★</span>`).join("");
+  return `<span class="rating-stars" aria-label="${safeRating.toFixed(1)} out of 5 stars">${stars}</span> <span class="rating-count">(${reviewCount})</span>`;
+};
 const $ = (selector) => document.querySelector(selector);
 const productGrid = $("#product-grid");
 const state = {
@@ -72,7 +77,7 @@ function renderProducts() {
         <button class="quick-add" type="button" data-add="${escapeHtml(product.id)}">Add to bag · ${money(product.price)}</button>
       </div>
       <div class="product-info"><h3 class="product-name">${escapeHtml(product.name)}</h3><p class="product-price">${money(product.price)}</p></div>
-      <p class="product-meta">${escapeHtml(product.color || product.category)} · ${Number(product.stock) > 0 ? "In stock" : "Sold out"}</p>
+      <p class="product-meta">${escapeHtml(product.color || product.category)} · ${Number(product.stock) > 0 ? "In stock" : "Sold out"} · ${renderRating(product.rating || 0, product.review_count || 0)}</p>
     </article>`).join("");
 }
 
@@ -158,7 +163,9 @@ function openProduct(productId) {
   const product = state.products.find((item) => String(item.id) === String(productId)) || fallbackProducts.find((item) => String(item.id) === String(productId));
   if (!product) return;
   const dialog = $("#product-dialog");
-  dialog.innerHTML = `<article class="product-detail"><img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}"><div class="product-detail-copy"><button class="close-button" type="button" data-close-product aria-label="Close details">×</button><p class="eyebrow">${escapeHtml(product.category)} · ${escapeHtml(product.color || "Thoughtfully made")}</p><h2>${escapeHtml(product.name)}</h2><p class="detail-price">${money(product.price)}</p><p class="detail-description">${escapeHtml(product.description || "Made with care, chosen to be useful, and ready to become part of your everyday.")}</p><p class="detail-stock">${Number(product.stock) > 0 ? `${product.stock} available` : "Currently sold out"}</p><button class="button button-dark" type="button" data-detail-add="${escapeHtml(product.id)}" ${Number(product.stock) < 1 ? "disabled" : ""}>Add to bag <span>${money(product.price)}</span></button></div></article>`;
+  const rating = Number(product.rating || 0);
+  const reviewCount = Number(product.review_count || 0);
+  dialog.innerHTML = `<article class="product-detail"><img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}"><div class="product-detail-copy"><button class="close-button" type="button" data-close-product aria-label="Close details">×</button><p class="eyebrow">${escapeHtml(product.category)} · ${escapeHtml(product.color || "Thoughtfully made")}</p><h2>${escapeHtml(product.name)}</h2><p class="detail-price">${money(product.price)}</p><div class="detail-rating">${renderRating(rating, reviewCount)}</div><p class="detail-description">${escapeHtml(product.description || "Made with care, chosen to be useful, and ready to become part of your everyday.")}</p><p class="detail-stock">${Number(product.stock) > 0 ? `${product.stock} available` : "Currently sold out"}</p><button class="button button-dark" type="button" data-detail-add="${escapeHtml(product.id)}" ${Number(product.stock) < 1 ? "disabled" : ""}>Add to bag <span>${money(product.price)}</span></button><form id="review-form" data-product-id="${escapeHtml(product.id)}" class="review-form"><label class="form-field">Your rating<select name="rating" required><option value="">Select</option><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select></label><label class="form-field">Review<textarea name="comment" rows="3" maxlength="500" placeholder="Tell us what you loved about this piece."></textarea></label><button class="button button-dark" type="submit">Leave a review</button></form></div></article>`;
   dialog.showModal();
 }
 
@@ -177,8 +184,47 @@ function renderCheckout() {
   const dialog = $("#checkout-dialog");
   const subtotal = state.cart.reduce((total, item) => total + Number(item.product.price) * item.quantity, 0);
   const rows = state.cart.map(({ product, quantity }) => `<div class="order-entry"><span>${quantity} × ${escapeHtml(product.name)}</span><strong>${money(Number(product.price) * quantity)}</strong></div>`).join("");
-  dialog.innerHTML = `<section class="form-panel"><button class="close-button" type="button" data-close-checkout aria-label="Close checkout">×</button><p class="eyebrow">A final look</p><h2 id="checkout-title">Ready when you are.</h2><p class="form-intro">Your order will be placed under ${escapeHtml(state.user?.email || "your account")}. No payment is collected in this demo.</p><div class="order-list">${rows}</div><div class="order-entry"><strong>Order total</strong><strong>${money(subtotal)}</strong></div><p class="form-error" id="checkout-error" aria-live="polite"></p><button class="button button-dark" id="place-order" type="button">Place your order <span>↗</span></button></section>`;
+  dialog.innerHTML = `<section class="form-panel"><button class="close-button" type="button" data-close-checkout aria-label="Close checkout">×</button><p class="eyebrow">A final look</p><h2 id="checkout-title">Ready when you are.</h2><p class="form-intro">Signed in as ${escapeHtml(state.user?.email || "your account")}. Payment is securely processed by Stripe.</p><div class="order-list">${rows}</div><div class="order-entry"><strong>Order total</strong><strong>${money(subtotal)}</strong></div><p class="form-error" id="checkout-error" aria-live="polite"></p><button class="button button-dark" id="place-order" type="button">Continue to payment <span>↗</span></button></section>`;
   dialog.showModal();
+}
+
+async function handlePaymentReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const payment = params.get("payment");
+  if (!payment) return;
+
+  if (payment === "cancelled") {
+    const orderId = Number(params.get("order_id"));
+    if (state.token && Number.isSafeInteger(orderId) && orderId > 0) {
+      await api("/api/payments/cancel-session", {
+        method: "POST",
+        body: JSON.stringify({ orderId })
+      }).catch(() => {});
+    }
+    showToast("Checkout cancelled. Your bag is still here.");
+  } else if (payment === "success") {
+    const sessionId = params.get("session_id");
+    if (!sessionId || !state.token) {
+      showToast("Sign in again to check your payment status.");
+    } else {
+      try {
+        const status = await api(`/api/payments/session-status?session_id=${encodeURIComponent(sessionId)}`);
+        if (status.paymentStatus === "paid") {
+          state.cart = [];
+          persistCart();
+          showToast(status.orderStatus === "placed"
+            ? `Payment confirmed. Order #${status.orderId} is placed.`
+            : `Payment confirmed. Finalizing order #${status.orderId}.`);
+        } else {
+          showToast("Payment is still processing. Your order will appear once confirmed.");
+        }
+      } catch (error) {
+        showToast(error.message);
+      }
+    }
+  }
+
+  window.history.replaceState({}, "", `${window.location.pathname}${window.location.hash}`);
 }
 
 async function showOrders() {
@@ -197,12 +243,57 @@ async function showOrders() {
   }
 }
 
+async function loadAdminOverview() {
+  if (!state.user) {
+    renderAccount("Sign in first to view the admin dashboard.");
+    return;
+  }
+
+  try {
+    const data = await api("/api/admin/overview");
+    const dialog = $("#admin-dialog");
+    const rows = data.recentOrders.map((order) => `
+      <div class="order-entry">
+        <div>
+          <strong>Order #${escapeHtml(order.id)}</strong><br>
+          <span>${escapeHtml(order.name)} · ${escapeHtml(order.status)}</span>
+        </div>
+        <strong>${money(order.total)}</strong>
+      </div>
+    `).join("") || '<p class="form-intro">No orders placed yet.</p>';
+    const stockRows = data.lowStockProducts.map((product) => `<div class="order-entry"><span>${escapeHtml(product.name)}</span><strong>${product.stock} left</strong></div>`).join("") || '<p class="form-intro">All products are well stocked.</p>';
+    dialog.innerHTML = `
+      <section class="form-panel">
+        <button class="close-button" type="button" data-close-admin aria-label="Close admin dashboard">×</button>
+        <p class="eyebrow">Admin dashboard</p>
+        <h2 id="admin-title">Store overview</h2>
+        <div class="order-entry"><span>Total users</span><strong>${data.summary.total_users}</strong></div>
+        <div class="order-entry"><span>Total orders</span><strong>${data.summary.total_orders}</strong></div>
+        <div class="order-entry"><span>Total revenue</span><strong>${money(data.summary.total_revenue)}</strong></div>
+        <div class="order-entry"><span>Low stock alerts</span><strong>${data.summary.low_stock_count}</strong></div>
+        <div class="order-list">
+          <h3>Recent orders</h3>
+          ${rows}
+        </div>
+        <div class="order-list">
+          <h3>Low stock</h3>
+          ${stockRows}
+        </div>
+      </section>
+    `;
+    dialog.showModal();
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
 function setUser(user, token) {
   state.user = user;
   state.token = token;
   localStorage.setItem("morrow-user", JSON.stringify(user));
   localStorage.setItem("morrow-token", token);
-  $("#account-button").textContent = "My account";
+  $("#account-button").textContent = user ? "My account" : "Sign in";
+  $("#admin-button").hidden = !user;
 }
 
 productGrid.addEventListener("click", (event) => {
@@ -233,6 +324,8 @@ document.addEventListener("click", async (event) => {
     $("#product-dialog").close();
   }
   if (target.matches("#account-button")) state.user ? renderAccount() : renderAccount();
+  if (target.matches("#admin-button")) loadAdminOverview();
+  if (target.matches("[data-close-admin]")) $("#admin-dialog").close();
   if (target.matches("[data-close-account]")) $("#account-dialog").close();
   if (target.matches("[data-switch-mode]")) renderAccount("", target.dataset.switchMode);
   if (target.matches("[data-show-orders]")) showOrders();
@@ -242,6 +335,7 @@ document.addEventListener("click", async (event) => {
     localStorage.removeItem("morrow-user");
     localStorage.removeItem("morrow-token");
     $("#account-button").textContent = "Sign in";
+    $("#admin-button").hidden = true;
     $("#account-dialog").close();
     showToast("You have signed out.");
   }
@@ -256,21 +350,21 @@ document.addEventListener("click", async (event) => {
   if (target.matches("#place-order")) {
     const button = target;
     button.disabled = true;
-    button.textContent = "Placing your order…";
+    button.textContent = "Opening secure checkout…";
     try {
-      const order = await api("/api/orders", {
+      const paymentRequest = await api("/api/payments/create-session", {
         method: "POST",
         body: JSON.stringify({ items: state.cart.map(({ product, quantity }) => ({ productId: product.id, quantity })) })
       });
-      state.cart = [];
-      persistCart();
+
+      if (!paymentRequest.checkoutUrl) throw new Error("Secure checkout is unavailable. No order has been placed.");
       $("#checkout-dialog").close();
-      showToast(`Order #${order.id} is on its way to the good-things list.`);
+      window.location.assign(paymentRequest.checkoutUrl);
     } catch (error) {
       const errorElement = $("#checkout-error");
       if (errorElement) errorElement.textContent = error.message;
       button.disabled = false;
-      button.innerHTML = "Place your order <span>↗</span>";
+      button.innerHTML = "Continue to payment <span>↗</span>";
     }
   }
 });
@@ -297,6 +391,29 @@ document.addEventListener("submit", async (event) => {
       if (email) email.value = payload.email;
     }
   }
+  if (event.target.matches("#review-form")) {
+    event.preventDefault();
+    const form = event.target;
+    const productId = form.dataset.productId;
+    const rating = Number(new FormData(form).get("rating"));
+    const comment = String(new FormData(form).get("comment") || "").trim();
+    try {
+      const result = await api(`/api/products/${productId}/reviews`, {
+        method: "POST",
+        body: JSON.stringify({ rating, comment })
+      });
+      const product = state.products.find((item) => String(item.id) === String(productId));
+      if (product) {
+        product.rating = result.rating;
+        product.review_count = result.review_count;
+      }
+      showToast(result.message);
+      $("#product-dialog").close();
+      openProduct(productId);
+    } catch (error) {
+      showToast(error.message);
+    }
+  }
   if (event.target.matches("#newsletter-form")) {
     event.preventDefault();
     $("#newsletter-message").textContent = "You're on the list. Talk soon.";
@@ -320,3 +437,4 @@ document.addEventListener("keydown", (event) => {
 if (state.user && state.token) $("#account-button").textContent = "My account";
 renderCart();
 loadProducts();
+handlePaymentReturn();

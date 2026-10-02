@@ -81,7 +81,7 @@ The cart is kept client-side (localStorage) and sent to the server at checkout.
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/<your-username>/CodeAlpha_EcommerceStore.git
+   git clone <your-repository-url>
    cd CodeAlpha_EcommerceStore
    ```
 
@@ -132,8 +132,16 @@ The cart is kept client-side (localStorage) and sent to the server at checkout.
 1. Register an account and log in.
 2. Browse products and open a product to see its details.
 3. Add items to your cart and adjust quantities.
-4. Check out to place an order.
-5. View past orders from your account.
+4. Continue to Stripe Checkout. Orders are placed only after Stripe confirms payment; canceled checkouts leave the bag intact.
+5. View confirmed orders from your account.
+
+## Integrations
+
+- **Stripe:** Set `STRIPE_SECRET_KEY` in `.env`, then configure a Stripe webhook at `/api/payments/webhook` with `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, and `checkout.session.expired`. Set the endpoint signing secret as `STRIPE_WEBHOOK_SECRET`. For local development, use `stripe listen --forward-to localhost:5000/api/payments/webhook` and copy the CLI's signing secret into `.env`.
+- **Order email:** Set `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`, and optionally `EMAIL_FROM`. Email is sent after payment confirmation.
+- **Admin dashboard:** Set `ADMIN_EMAIL` before registering the matching account.
+
+Keep working provider credentials in `.env` only. `.env.example` must contain placeholders, never real keys or passwords.
 
 ## Security Notes
 
@@ -142,17 +150,10 @@ The cart is kept client-side (localStorage) and sent to the server at checkout.
 - Database queries use parameterized statements to prevent SQL injection.
 - Secrets live in `.env`, which is excluded from version control.
 
-## Future Improvements
-
-- Payment gateway integration
-- Admin dashboard for managing products and orders
-- Product reviews and ratings
-- Email confirmation for orders
-
 ## Author
 
 **Storm**
-[GitHub](https://github.com/<your-username>) · [LinkedIn](https://linkedin.com/in/<your-profile>)
+Project author details can be added here.
 
 ## Acknowledgements
 
